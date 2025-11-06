@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Admin Dashboard | SarApp Portal</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap (kept for convenience since original used it) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Modern system font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --bg: #f5f7fb;
+            --panel:#ffffff;
+            --muted:#6b7280;
+            --accent:#0f172a;
+            --primary:#2563eb;
+            --success:#10b981;
+            --danger:#ef4444;
+            --glass: rgba(255,255,255,0.85);
+        }
+
+        html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,var(--bg),#eef4ff)}
+        .page-wrap{max-width:1200px;margin:34px auto;padding:20px;display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start}
+
+        /* SIDEBAR */
+        .sidebar{
+            background:var(--panel);
+            border-radius:14px;padding:22px;box-shadow:0 10px 30px rgba(2,6,23,0.06);border:1px solid rgba(2,6,23,0.04);
+        }
+        .brand{
+            display:flex;gap:12px;align-items:center;margin-bottom:18px;
+        }
+        .brand .logo{
+            width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--primary),#7c3aed);
+            box-shadow:0 8px 20px rgba(37,99,235,0.12)
+        }
+        .brand .title{font-weight:700;color:var(--accent);font-size:16px}
+        .nav-list{margin-top:12px;padding:0;list-style:none}
+        .nav-list li{margin:8px 0}
+        .nav-list a{display:block;padding:10px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-weight:600}
+        .nav-list a.active{background:linear-gradient(90deg,#eef2ff,#eef9ff);color:var(--primary);box-shadow:inset 0 0 0 1px rgba(37,99,235,0.06)}
+
+        /* MAIN PANEL */
+        .panel{
+            background:var(--panel);border-radius:14px;padding:26px;box-shadow:0 12px 40px rgba(2,6,23,0.06);border:1px solid rgba(2,6,23,0.04);
+        }
+        .panel .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+        .panel h1{margin:0;font-size:20px;color:var(--accent)}
+        .header-right{display:flex;gap:10px;align-items:center}
+        .btn-ghost{background:transparent;border:1px solid rgba(2,6,23,0.06);color:var(--muted);padding:9px 12px;border-radius:10px;font-weight:600}
+        .btn-primary{
+            background:linear-gradient(90deg,var(--primary),#4f46e5);
+            color:white;border:none;padding:10px 14px;border-radius:10px;font-weight:700;box-shadow:0 10px 30px rgba(37,99,235,0.12)
+        }
+
+        /* STATS */
+        .stats{display:flex;gap:14px;margin-bottom:18px}
+        .stat-card{flex:1;background:linear-gradient(180deg,#ffffff,#fbfdff);padding:16px;border-radius:12px;border:1px solid rgba(2,6,23,0.03)}
+        .stat-card h3{margin:0;font-size:14px;color:var(--muted);font-weight:600}
+        .stat-card .big{font-size:26px;margin-top:6px;font-weight:800;color:var(--primary)}
+
+        /* USERS TABLE */
+        .table-wrap{margin-top:8px;border-radius:12px;overflow:hidden;border:1px solid rgba(2,6,23,0.04)}
+        table.custom-table{width:100%;border-collapse:collapse;background:transparent}
+        table.custom-table thead th{background:#fafbfd;padding:14px 16px;text-align:left;color:var(--muted);font-size:13px;border-bottom:1px solid rgba(2,6,23,0.03)}
+        table.custom-table tbody td{padding:12px 14px;border-bottom:1px solid rgba(2,6,23,0.03);vertical-align:middle}
+        table.custom-table tbody tr:hover{background:linear-gradient(90deg,#f6f9ff,#ffffff)}
+
+        .form-inline{display:flex;gap:10px;align-items:center}
+        .form-inline .form-control{height:46px;border-radius:10px;padding:0 12px;border:1px solid rgba(2,6,23,0.06)}
+        .small-btn{padding:6px 10px;border-radius:8px;font-weight:700;border:none}
+
+        /* ACTION BUTTONS */
+        .btn-success { background: linear-gradient(90deg,var(--success),#34d399); color: white; border: none; border-radius:8px; padding:8px 12px; font-weight:700; }
+        .btn-danger  { background: linear-gradient(90deg,var(--danger),#fb7185); color: white; border: none; border-radius:8px; padding:8px 12px; font-weight:700; }
+
+        /* MODAL (customize bootstrap modal look) */
+        .modal-content {
+            border-radius:14px;
+        }
+        .modal-header{border-bottom:none;padding:20px 24px 0 24px}
+        .modal-body{padding:12px 24px 18px 24px}
+        .modal-footer{border-top:none;padding:12px 24px 20px 24px}
+
+        /* footer text */
+        .footer {text-align:center;color:var(--muted);font-size:13px;margin-top:18px}
+
+        @media (max-width: 980px){
+            .page-wrap{grid-template-columns:1fr;padding:16px}
+            .sidebar{order:2}
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-wrap">
+    <!-- LEFT NAV / UTILITIES -->
+    <aside class="sidebar" aria-label="Admin navigation">
+        <div class="brand">
+            <div class="logo" aria-hidden="true"></div>
+            <div>
+                <div class="title">SarApp</div>
+                <div style="font-size:12px;color:var(--muted)">Identity Platform</div>
+            </div>
+        </div>
+
+        <ul class="nav-list" role="navigation">
+            <li><a href="/admin/dashboard" class="active">Dashboard</a></li>
+            <li><a href="/admin/users">Users</a></li>
+            <li><a href="/admin/sso-settings">SSO Settings</a></li>
+            <li><a href="/admin/logs">System Logs</a></li>
+            <li><a href="/admin/settings">General Settings</a></li>
+        </ul>
+
+        <div style="margin-top:18px">
+            <div style="font-weight:700;color:var(--accent);font-size:13px">Quick actions</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+                <button type="button" class="btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">+ Add user</button>
+                <a href="/admin/sso-settings" class="btn-ghost" style="text-align:center">Configure SSO</a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN PANEL -->
+    <main class="panel" role="main">
+        <div class="header">
+            <h1>Admin Dashboard</h1>
+            <div class="header-right">
+                <div style="text-align:right">
+                    <div style="font-size:13px;color:var(--muted)">Signed in as</div>
+                    <div style="font-weight:700">Admin</div>
+                </div>
+                <a href="/logout" class="btn-ghost" title="Logout">Logout</a>
+            </div>
+        </div>
+
+        <!-- STATS ROW -->
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total users</h3>
+                <div class="big" th:text="${totalUsers}">0</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Active sessions</h3>
+                <div class="big">—</div>
+            </div>
+
+            <div class="stat-card">
+                <h3>SSO providers</h3>
+                <div class="big">3</div>
+            </div>
+        </div>
+
+        <!-- TABLE & ACTIONS -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="display:flex;gap:12px;align-items:center">
+                <div class="form-inline">
+                    <input type="text" class="form-control" placeholder="Search users" aria-label="Search users" />
+                    <select class="form-control" style="height:46px;border-radius:10px">
+                        <option value="">All</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center">
+                <a href="/admin/sso-settings" class="btn-ghost">SSO Settings</a>
+                <button class="btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">➕ Add User</button>
+            </div>
+        </div>
+
+        <!-- USERS TABLE -->
+        <div class="table-wrap" role="region" aria-label="User list">
+            <table class="custom-table">
+                <thead>
+                <tr>
+                    <th style="width:6%">ID</th>
+                    <th style="width:34%">Name</th>
+                    <th style="width:40%">Email</th>
+                    <th style="width:20%" class="text-center">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${users}">
+                    <td th:text="${user.id}">1</td>
+
+                    <!-- keep same form action and bindings — DO NOT change -->
+                    <td>
+                        <form th:action="@{'/admin/update/' + ${user.id}}" method="post" class="d-flex gap-2 align-items-center" style="gap:12px">
+                            <input type="text" name="name" th:value="${user.name}" class="form-control" placeholder="Name" style="flex:0 0 45%">
+                            <input type="email" name="email" th:value="${user.email}" class="form-control" placeholder="Email" style="flex:1 1 auto">
+                            <button type="submit" class="small-btn btn-success">Save</button>
+                        </form>
+                    </td>
+
+                    <td class="text-center">
+                        <a th:href="@{'/admin/delete/' + ${user.id}}"
+                           class="small-btn btn-danger"
+                           onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer text -->
+        <div class="footer">© 2025 SarApp | Identity Management Dashboard 🔐</div>
+    </main>
+</div>
+
+<!-- ADD USER MODAL -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="addUserModalLabel" class="modal-title">Add New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- keep same action and fields -->
+            <form th:action="@{/admin/add-user}" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="Enter full name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="Enter email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" placeholder="Enter username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-success">Add User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS (kept same) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

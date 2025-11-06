@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SSO Configuration | SarApp Admin</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        :root {
+          --bg-left: #0f172a;
+          --bg-right: #1e293b;
+          --panel-bg: #ffffff;
+          --accent: #3b82f6;
+          --accent-light: #60a5fa;
+          --success: #10b981;
+          --warning: #f59e0b;
+          --text-main: #111827;
+          --text-muted: #6b7280;
+          --radius: 16px;
+        }
+
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+
+        body {
+          font-family: 'Inter', sans-serif;
+          background: linear-gradient(135deg, var(--bg-left), var(--bg-right));
+          color: var(--text-main);
+          min-height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+          padding: 60px 0;
+        }
+
+        .settings-card {
+          width: 950px;
+          background: var(--panel-bg);
+          border-radius: 28px;
+          padding: 50px 65px;
+          box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+          animation: slideIn 0.8s ease;
+        }
+
+        h2 {
+          text-align: center;
+          font-size: 2rem;
+          font-weight: 700;
+          color: var(--accent);
+          margin-bottom: 25px;
+        }
+
+        .note {
+          background: rgba(245, 158, 11, 0.15);
+          border-left: 5px solid var(--warning);
+          border-radius: var(--radius);
+          padding: 14px 18px;
+          font-size: 0.95rem;
+          color: var(--text-muted);
+          margin-bottom: 30px;
+        }
+
+        .section {
+          margin-top: 40px;
+          border-top: 1px solid #e5e7eb;
+          padding-top: 25px;
+        }
+
+        .section h3 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: var(--accent);
+          margin-bottom: 15px;
+        }
+
+        label {
+          display: block;
+          font-weight: 500;
+          color: var(--text-main);
+          margin-bottom: 6px;
+        }
+
+        input, textarea {
+          width: 100%;
+          background: #f9fafb;
+          border: 1px solid #d1d5db;
+          border-radius: var(--radius);
+          padding: 12px 14px;
+          font-size: 0.95rem;
+          margin-bottom: 18px;
+          color: #111;
+          transition: 0.2s ease;
+        }
+
+        input:focus, textarea:focus {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+          outline: none;
+        }
+
+        textarea {
+          resize: none;
+          height: 100px;
+        }
+
+        .checkbox-group {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 18px;
+        }
+
+        .checkbox-group input {
+          width: auto;
+          accent-color: var(--accent);
+        }
+
+        .buttons {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 40px;
+        }
+
+        .btn {
+          border: none;
+          border-radius: var(--radius);
+          padding: 12px 30px;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: 0.3s ease;
+        }
+
+        .btn-primary {
+          background: linear-gradient(90deg, var(--accent), var(--accent-light));
+          color: #fff;
+          box-shadow: 0 5px 18px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+          background: #f3f4f6;
+          color: var(--text-main);
+          border: 1px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+          background: #e5e7eb;
+        }
+
+        .btn-success {
+          display: inline-block;
+          width: 100%;
+          background: linear-gradient(90deg, var(--success), #34d399);
+          color: white;
+          padding: 14px;
+          border-radius: var(--radius);
+          font-weight: 600;
+          text-align: center;
+          margin-top: 10px;
+          box-shadow: 0 5px 18px rgba(16, 185, 129, 0.3);
+          transition: 0.3s;
+        }
+
+        .btn-success:hover {
+          transform: scale(1.03);
+          box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .alert {
+          background: rgba(16, 185, 129, 0.15);
+          color: var(--success);
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          border-radius: var(--radius);
+          text-align: center;
+          padding: 12px;
+          margin-top: 25px;
+          font-weight: 600;
+        }
+
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateY(25px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+          .settings-card {
+            width: 92%;
+            padding: 35px 25px;
+          }
+          h2 { font-size: 1.7rem; }
+          .buttons { flex-direction: column; gap: 15px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="settings-card">
+    <h2>🛡️ SSO Configuration</h2>
+
+    <div class="note">
+        <b>Tip:</b> Configure your preferred login method below (JWT, SAML, or OAuth).
+    </div>
+
+    <form th:action="@{/admin/update-sso}" method="post">
+        <input type="hidden" name="id" th:value="${config.id}" />
+
+        <!-- JWT Settings -->
+        <div class="section">
+            <h3>🟠 JWT Settings</h3>
+            <div class="checkbox-group">
+                <input type="checkbox" name="jwtEnabled" th:checked="${config.jwtEnabled}">
+                <label>Enable JWT Login</label>
+            </div>
+            <label>Login URL</label>
+            <input type="text" name="jwtUrl" th:value="${config.jwtUrl}" placeholder="https://example.com/jwt/login">
+
+            <label>Issuer</label>
+            <input type="text" name="jwtIssuer" th:value="${config.jwtIssuer}" placeholder="miniOrange">
+
+            <label>Secret (Base64 Encoded)</label>
+            <input type="password" name="jwtSecret" th:value="${config.jwtSecret}" placeholder="Enter JWT Secret">
+        </div>
+
+        <!-- SAML Settings -->
+        <div class="section">
+            <h3>🔵 SAML Settings</h3>
+            <div class="checkbox-group">
+                <input type="checkbox" name="samlEnabled" th:checked="${config.samlEnabled}">
+                <label>Enable SAML Login</label>
+            </div>
+
+            <label>Login URL</label>
+            <input type="text" name="samlUrl" th:value="${config.samlUrl}" placeholder="https://idp.example.com/sso/login">
+
+            <label>SP Entity ID</label>
+            <input type="text" name="samlEntityId" th:value="${config.samlEntityId}">
+
+            <label>IDP Certificate</label>
+            <textarea name="samlCertificate" th:text="${config.samlCertificate}" placeholder="-----BEGIN CERTIFICATE----- ... -----END CERTIFICATE-----"></textarea>
+        </div>
+
+        <!-- OAuth Settings -->
+        <div class="section">
+            <h3>🟢 OAuth Settings</h3>
+            <div class="checkbox-group">
+                <input type="checkbox" name="oauthEnabled" th:checked="${config.oauthEnabled}">
+                <label>Enable OAuth Login</label>
+            </div>
+
+            <label>Authorization URL</label>
+            <input type="text" name="oauthUrl" th:value="${config.oauthUrl}" placeholder="https://login.xecurify.com/moas/idp/oauth/authorize">
+
+            <label>Token URL</label>
+            <input type="text" name="oauthTokenUrl" th:value="${config.oauthTokenUrl}" placeholder="https://login.xecurify.com/moas/idp/oauth/token">
+
+            <label>User Info URL</label>
+            <input type="text" name="oauthUserInfoUrl" th:value="${config.oauthUserInfoUrl}" placeholder="https://login.xecurify.com/moas/idp/userinfo">
+
+            <label>Client ID</label>
+            <input type="text" name="oauthClientId" th:value="${config.oauthClientId}" placeholder="Your Client ID">
+
+            <label>Client Secret</label>
+            <input type="password" name="oauthClientSecret" th:value="${config.oauthClientSecret}" placeholder="Your Client Secret">
+
+            <label>Redirect URI</label>
+            <input type="text" name="oauthRedirectUri" th:value="${config.oauthRedirectUri}" placeholder="http://localhost:8080/sso/oauth/callback">
+
+            <a href="/sso/oauth/login" class="btn-success">🚀 Test OAuth Login</a>
+        </div>
+
+        <!-- Buttons -->
+        <div class="buttons">
+            <a href="/admin/dashboard" class="btn btn-secondary">⬅ Back</a>
+            <button type="submit" class="btn btn-primary">💾 Save Settings</button>
+        </div>
+    </form>
+
+    <div th:if="${param.saved}" class="alert">
+        ✅ Settings updated successfully!
+    </div>
+</div>
+</body>
+</html>
