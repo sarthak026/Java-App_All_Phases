@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Dashboard | Customer Admins</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #007bff; /* Clean Blue Accent */
+            --primary-light: #e6f2ff; /* Very Light Blue for Hover/Background */
+            --sidebar-dark: #2c3e50; /* Dark sidebar for contrast */
+            --sidebar-header: #1e3040;
+            --text-dark: #2c3e50;
+            --text-medium: #7f8c8d;
+            --bg-page: #f4f7f9; /* Light page background */
+            --bg-card: white;
+            --border-color: #e0e0e0;
+            --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-page);
+        }
+
+        /* --- Full Page Layout (Sidebar structure) --- */
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar (Vertical Navigation) --- */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-dark);
+            color: white;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 500;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            background-color: var(--sidebar-header);
+        }
+        
+        .sidebar-user-info {
+            padding: 15px 20px 10px;
+            border-bottom: 1px solid #34495e;
+            text-align: center;
+        }
+        
+        .sidebar-user-email {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .sidebar-user-role {
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 12px;
+            margin-top: 4px;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 0;
+            padding-top: 10px;
+        }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: #bdc3c7;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.3s, color 0.3s;
+            border-left: 5px solid transparent;
+        }
+
+        .sidebar-nav a i {
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        .sidebar-nav a:hover:not(.active) {
+            background-color: #34495e;
+            color: white;
+        }
+
+        .sidebar-nav a.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-left-color: #fff;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid #34495e;
+        }
+
+        .btn-sidebar-logout {
+            width: 100%;
+            background-color: #dc3545; 
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-sidebar-logout:hover {
+            background-color: #c82333;
+        }
+        
+        /* --- Main Content Area --- */
+        .main-content {
+            flex-grow: 1;
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        /* --- Header --- */
+        .main-header-bar {
+            padding: 30px 40px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .main-header-bar h1 {
+            font-size: 28px;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .main-header-bar p {
+            color: var(--text-medium);
+            font-size: 15px;
+        }
+        
+        /* --- Content Area --- */
+        .content-area {
+            padding: 30px 40px;
+        }
+
+        /* --- Cards and Table --- */
+        .card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 0; 
+            box-shadow: var(--shadow-subtle);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* --- Buttons --- */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 3px 8px rgba(0, 123, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            background-color: #0056b3;
+            box-shadow: 0 5px 12px rgba(0, 123, 255, 0.5);
+        }
+
+        .btn-success {
+            background: var(--primary-light);
+            color: var(--primary-color);
+        }
+        
+        .btn-success:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f8d7da;
+            color: #dc3545;
+        }
+        
+        .btn-danger:hover {
+             background: #dc3545;
+             color: white;
+        }
+
+        .btn-small {
+            padding: 8px 10px;
+            font-size: 14px;
+        }
+
+        /* --- Table --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #ecf0f1; 
+            padding: 12px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-dark);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 12px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            color: var(--text-dark);
+        }
+
+        tr:hover {
+            background: var(--primary-light);
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 4px; 
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        /* Keeping original badge colors for status indication */
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-info {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        /* Modal Styles (Adjusted max-width) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 30px;
+            width: 90%;
+            max-width: 550px; /* Slightly larger modal */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            background: var(--bg-page);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+            background: white;
+        }
+
+        .form-group input[readonly] {
+            background: #e9ecef;
+            cursor: not-allowed;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-medium);
+            font-size: 16px;
+        }
+
+        .empty-state i {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: var(--border-color);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        /* Alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        /* --- Hide elements removed by request --- */
+        .navbar, .container, .tabs, .tab, #ssoConfig {
+            display: none !important; 
+        }
+    </style>
+</head>
+<body>
+<div class="app-layout">
+    <div class="sidebar">
+        <div class="sidebar-header"><i class="fas fa-rocket"></i> Admin Portal</div>
+        
+        <div class="sidebar-user-info">
+            <div class="sidebar-user-email" id="userEmail">Loading...</div>
+            <div class="sidebar-user-role"><i class="fas fa-crown"></i> SUPER ADMIN</div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="#" class="active" onclick="switchSidebarTab(this, 'customerAdmins')">
+                <i class="fas fa-users-cog"></i> Customer Admins
+            </a>
+            <a href="#" onclick="alert('Platform Analytics module is in development.')">
+                <i class="fas fa-chart-line"></i> Platform Analytics
+            </a>
+            </nav>
+
+        <div class="sidebar-footer">
+            <button class="btn-sidebar-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="main-header-bar">
+            <h1>Welcome, Super Admin</h1>
+            <p>Manage customer admins and platform tenants centrally.</p>
+        </div>
+
+        <div class="content-area">
+
+            <div id="customerAdmins" class="tab-content active">
+                <div id="alertContainer"></div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-list-alt"></i> Customer Admins List</h2>
+                        <button class="btn btn-primary" onclick="openCreateModal()">
+                            <i class="fas fa-user-plus"></i> Add Customer Admin
+                        </button>
+                    </div>
+
+                    <table id="customerAdminsTable">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Name</th>
+                            <th>Tenant/Subdomain</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody id="customerAdminsBody">
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Loading customer admins...</p>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<div id="customerAdminModal" class="modal">
+    <div class="modal-content">
+        <h3 class="modal-header" id="modalTitle">Add Customer Admin</h3>
+        <form id="customerAdminForm">
+            <input type="hidden" id="userId">
+
+            <div class="form-group">
+                <label for="firstName">First Name *</label>
+                <input type="text" id="firstName" required placeholder="Alice">
+            </div>
+
+            <div class="form-group">
+                <label for="lastName">Last Name *</label>
+                <input type="text" id="lastName" required placeholder="Smith">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" required placeholder="admin@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="tenantSubdomain">Tenant Subdomain *</label>
+                <input type="text" id="tenantSubdomain" placeholder="e.g., awesomecorp" required>
+                <small style="color: #666;">This is the unique subdomain for the customer's portal.</small>
+            </div>
+
+            <div class="form-group" id="passwordGroup">
+                <label for="password">Password *</label>
+                <input type="password" id="password" placeholder="Set initial password">
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // --- AUTHENTICATION & INITIAL LOAD ---
+    const token = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
+    const userEmail = localStorage.getItem('userEmail');
+
+    if (!token || userRole !== 'SUPER_ADMIN') {
+        window.location.href = 'login.html';
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        const emailElement = document.getElementById('userEmail');
+        if (emailElement) {
+             emailElement.textContent = userEmail;
+        }
+        loadCustomerAdmins();
+    });
+
+    // Dummy function for sidebar (to handle styling on click, no actual switching needed)
+    function switchSidebarTab(clickedTab, targetId) {
+        document.querySelectorAll('.sidebar-nav a').forEach(a => {
+            a.classList.remove('active');
+        });
+        clickedTab.classList.add('active');
+        // If you add more tabs later, this is where you'd hide/show them based on targetId
+    }
+    
+    // --- CRUD FUNCTIONS ---
+
+    // Load customer admins
+    async function loadCustomerAdmins() {
+        const tbody = document.getElementById('customerAdminsBody');
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading customer admins...</p></td></tr>`;
+
+        try {
+            // NOTE: The API endpoint below is assumed based on your original code
+            const response = await fetch('/api/super-admin/customer-admins', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const customerAdmins = await response.json();
+                displayCustomerAdmins(customerAdmins);
+            } else if (response.status === 401) {
+                logout();
+            } else {
+                showAlert('Failed to load customer admins', 'error');
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading data.</p></td></tr>`;
+            }
+        } catch (error) {
+            console.error('Error loading customer admins:', error);
+            showAlert('Network error while loading data', 'error');
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><i class="fas fa-network-wired"></i><p>Network connection failed.</p></td></tr>`;
+        }
+    }
+
+    function displayCustomerAdmins(customerAdmins) {
+        const tbody = document.getElementById('customerAdminsBody');
+
+        if (customerAdmins.length === 0) {
+            tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <i class="fas fa-user-slash"></i>
+                            <p>No customer admins have been created yet. Click "Add Customer Admin" to begin.</p>
+                        </td>
+                    </tr>
+                `;
+            return;
+        }
+
+        tbody.innerHTML = customerAdmins.map(admin => `
+                <tr>
+                    <td>${admin.id}</td>
+                    <td>${admin.email}</td>
+                    <td>${admin.firstName} ${admin.lastName}</td>
+                    <td>
+                        <span class="badge badge-info">${admin.tenantSubdomain}</span>
+                    </td>
+                    <td>
+                        <span class="badge ${admin.active ? 'badge-success' : 'badge-danger'}">
+                            ${admin.active ? 'ACTIVE' : 'INACTIVE'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-small btn-success" onclick="editCustomerAdmin(${admin.id})" title="Edit User">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn btn-small btn-danger" onclick="deleteCustomerAdmin(${admin.id})" title="Delete User">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+    }
+
+    // Modal Operations
+    function openCreateModal() {
+        document.getElementById('modalTitle').textContent = 'Add Customer Admin';
+        document.getElementById('customerAdminForm').reset();
+        document.getElementById('userId').value = '';
+        document.getElementById('passwordGroup').style.display = 'block';
+        document.getElementById('password').required = true;
+        document.getElementById('email').readOnly = false;
+        document.getElementById('tenantSubdomain').readOnly = false;
+        document.getElementById('customerAdminModal').classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('customerAdminModal').classList.remove('show');
+    }
+
+    // Handle form submission (Create/Update)
+    document.getElementById('customerAdminForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const submitBtn = document.querySelector('#customerAdminModal .btn-primary');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+
+        const userId = document.getElementById('userId').value;
+        const isEdit = userId !== '';
+
+        const formData = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            email: document.getElementById('email').value,
+            tenantSubdomain: document.getElementById('tenantSubdomain').value,
+            role: 'CUSTOMER_ADMIN'
+        };
+
+        if (!isEdit) {
+            formData.password = document.getElementById('password').value;
+        }
+
+        try {
+            const url = isEdit
+                ? `/api/super-admin/users/${userId}`
+                : '/api/super-admin/customer-admins';
+
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                showAlert(`Customer admin ${isEdit ? 'updated' : 'created'} successfully!`, 'success');
+                closeModal();
+                loadCustomerAdmins();
+            } else {
+                const error = await response.json();
+                showAlert(error.error || 'Operation failed', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('Network error', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Save';
+        }
+    });
+
+    // Edit user logic
+    async function editCustomerAdmin(userId) {
+        document.getElementById('modalTitle').textContent = 'Edit Customer Admin';
+        document.getElementById('userId').value = userId;
+
+        // Hide password group for edit and reset fields
+        document.getElementById('passwordGroup').style.display = 'none';
+        document.getElementById('password').required = false;
+        document.getElementById('customerAdminForm').reset();
+
+        document.getElementById('email').readOnly = true;
+        document.getElementById('tenantSubdomain').readOnly = true;
+
+        try {
+            const response = await fetch(`/api/super-admin/users/${userId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const admin = await response.json();
+                document.getElementById('firstName').value = admin.firstName;
+                document.getElementById('lastName').value = admin.lastName;
+                document.getElementById('email').value = admin.email;
+                document.getElementById('tenantSubdomain').value = admin.tenantSubdomain;
+                document.getElementById('customerAdminModal').classList.add('show');
+            } else {
+                showAlert('Failed to fetch user data for edit.', 'error');
+            }
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+            showAlert('Network error while loading user data.', 'error');
+        }
+    }
+
+    // Delete user logic
+    async function deleteCustomerAdmin(userId) {
+        if (!confirm('Are you sure you want to delete this customer admin? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/super-admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                showAlert('Customer admin deleted successfully!', 'success');
+                loadCustomerAdmins();
+            } else {
+                const error = await response.json();
+                showAlert(error.error || 'Failed to delete customer admin', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('Network error', 'error');
+        }
+    }
+
+    // --- UTILITY FUNCTIONS ---
+    function showAlert(message, type) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+        const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-times-circle';
+
+        alertContainer.innerHTML = `
+                <div class="alert ${alertClass}">
+                    <i class="fas ${iconClass}"></i>
+                    ${message}
+                </div>
+            `;
+
+        setTimeout(() => {
+            alertContainer.innerHTML = '';
+        }, 5000);
+    }
+
+    function logout() {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userEmail');
+        // Redirect to login page
+        window.location.href = 'login.html';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('customerAdminModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    }
+</script>
+</body>
+</html>

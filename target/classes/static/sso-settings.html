@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSO Settings | SarApp Integration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        /* Deep Blue Professional Theme Variables */
+        :root {
+            --primary-blue: #1e40af; /* Deep Blue - Buttons, Tabs Active */
+            --secondary-blue: #1e3a8a; /* Darker Blue - Navbar, Shadows */
+            --primary-light: #eff6ff; /* Very Light Blue for contrast/background */
+            --bg-page: #f4f7f9; /* Light, clean background */
+            --bg-card: white;
+            --text-dark: #1f2937; /* Very dark gray */
+            --text-medium: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --button-test: #ff9800; /* Orange for Test button */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        /* --- Navbar --- */
+        .navbar {
+            background: var(--secondary-blue);
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+            border-bottom: 3px solid var(--primary-blue);
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 0.5px;
+        }
+        .navbar-brand i { color: #facc15; margin-right: 8px; }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid white;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background: white;
+            color: var(--secondary-blue);
+        }
+
+        /* --- Container and Card --- */
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .settings-card {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-medium);
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+
+        .note {
+            background: var(--primary-light);
+            border-left: 4px solid var(--primary-blue);
+            padding: 15px;
+            border-radius: 6px;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        /* --- NEW SSO Layout for Vertical Split --- */
+        .sso-layout {
+            display: grid;
+            /* Column 1: Tabs (fixed width) | Column 2: Content (takes remaining space) */
+            grid-template-columns: 200px 1fr;
+            gap: 40px;
+            padding-top: 20px; /* Space between note and sso layout */
+        }
+        
+        .content-area {
+            /* This div wraps all the form sections */
+            /* No explicit styles needed, grid handles positioning */
+        }
+
+        /* --- Vertical Tabs Styling --- */
+        .nav-tabs {
+            display: flex;
+            flex-direction: column; /* Stack tabs vertically */
+            gap: 0px; /* Remove gaps between buttons */
+            border-bottom: none; /* Remove horizontal border */
+            padding-bottom: 0;
+            border-right: 2px solid var(--border-color); /* Separator line for tabs */
+        }
+
+        .nav-tabs .nav-link {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-medium);
+            transition: all 0.2s ease;
+            text-align: left; /* Align text to the left */
+            border: none;
+            border-right: 3px solid transparent; /* Highlight on the right side */
+            font-size: 16px;
+            border-radius: 0;
+            background: transparent;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--primary-blue);
+            background: var(--primary-light); /* Light highlight on hover */
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-blue);
+            border-right: 3px solid var(--primary-blue); /* Solid underline effect */
+            background: var(--primary-light); /* Highlight active tab background */
+            font-weight: 700;
+        }
+        .nav-tabs .nav-link i { margin-right: 8px; }
+
+        /* --- Form Elements --- */
+        .form-section:not(.active) {
+            display: none;
+        }
+        
+        .form-section h4 {
+            /* Keep existing h4 styling for form sections */
+            font-weight: 700;
+            color: var(--primary-blue);
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            padding: 0; /* Remove inner padding inherited from parent */
+        }
+        
+        /* ... (Keep the rest of your form, check, and button styles) ... */
+        label {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-dark);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            outline: none;
+            background: white;
+            color: var(--text-dark);
+            font-size: 15px;
+            transition: all 0.25s ease;
+        }
+
+        .form-control:focus {
+            background: var(--primary-light);
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2);
+        }
+
+        textarea.form-control {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background: #f8fafc;
+            border: 1px dashed var(--border-color);
+        }
+
+        .form-check {
+            background: var(--primary-light);
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid var(--primary-light);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-check:hover {
+            border-color: var(--primary-blue);
+        }
+
+        .form-check-input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary-blue);
+        }
+
+        .form-check-label {
+            color: var(--text-dark);
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .btn {
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: white;
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.4);
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-blue);
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn-test {
+            width: 100%;
+            background-color: var(--button-test);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+        }
+
+        .btn-test:hover {
+            background-color: #e68a00;
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .small-text {
+            font-size: 12px;
+            color: var(--text-medium);
+            margin-top: 5px;
+            padding-left: 5px;
+        }
+        
+        .alert {
+            display: none; /* Hide by default, shown by JS */
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="navbar-brand"><i class="fas fa-fingerprint"></i>  SSO Configuration</div>
+    <a href="/customer-admin-dashboard.html" class="btn-back">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</nav>
+
+<div class="container">
+    <div class="settings-card">
+        <h2>Identity Provider Integration</h2>
+        <p class="subtitle">Securely manage and configure your organization's Single Sign-On (SSO) settings with **miniOrange**.</p>
+
+        <div class="note">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Important:</strong> Our application acts as the **Service Provider (SP)**. Only one protocol can be active at a time.
+        </div>
+
+        <div class="sso-layout">
+            <div class="nav-tabs">
+                <button class="nav-link active" data-section="jwt"><i class="fas fa-key"></i> JWT</button>
+                <button class="nav-link" data-section="saml"><i class="fas fa-lock"></i> SAML</button>
+                <button class="nav-link" data-section="oauth"><i class="fas fa-globe-americas"></i> OAuth 2.0</button>
+            </div>
+
+            <div class="content-area">
+                <div id="jwt" class="form-section active">
+                    <h4>JWT Configuration Details</h4>
+                    <form id="jwtForm">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="jwtEnabled" name="enabled">
+                            <label class="form-check-label" for="jwtEnabled">Activate **JWT** Login</label>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="jwtUrl">JWT Login URL <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control" id="jwtUrl" name="jwtUrl" placeholder="https://login.xecurify.com/moas/jwt/login" required>
+                            <p class="small-text">The endpoint where users will be redirected to initiate JWT authentication.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="jwtIssuer">JWT Issuer <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control" id="jwtIssuer" name="jwtIssuer" placeholder="miniOrange" required>
+                            <p class="small-text">The **'iss'** claim value. Must match the value configured in your IdP.</p>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label for="jwtSecret">JWT Secret (HS256)</label>
+                            <input type="password" class="form-control" id="jwtSecret" name="jwtSecret" placeholder="Enter JWT Secret Key">
+                            <p class="small-text">Symmetric validation key. Only required if using **HS256** signature.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="jwtCertificate">JWT Certificate (RS256)</label>
+                            <textarea class="form-control" id="jwtCertificate" name="jwtCertificate" placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"></textarea>
+                            <p class="small-text">Public key certificate. Only required if using **RS256** signature.</p>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save JWT Configuration</button>
+                        <button type="button" class="btn btn-test" onclick="testJWT()"><i class="fas fa-vial"></i> Test JWT Connection</button>
+                    </form>
+                </div>
+
+                <div id="saml" class="form-section">
+                    <h4>SAML Configuration Details</h4>
+                    <form id="samlForm">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="samlEnabled" name="enabled">
+                            <label class="form-check-label" for="samlEnabled">Activate **SAML** Login</label>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="samlSsoUrl">SAML SSO URL <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control" id="samlSsoUrl" name="samlSsoUrl" placeholder="https://login.xecurify.com/moas/idp/samlsso" required>
+                            <p class="small-text">The Identity Provider's Single Sign-On service endpoint.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="idpEntityId">IdP Entity ID <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control" id="idpEntityId" name="idpEntityId" placeholder="https://login.xecurify.com/moas/idp/saml" required>
+                            <p class="small-text">A unique identifier for the Identity Provider (IdP).</p>
+                        </div>
+
+                        <hr style="border-top: 1px dashed var(--border-color); margin: 30px 0;">
+                        
+                        <h4>Service Provider (SP) Information</h4>
+
+                        <div class="form-group">
+                            <label for="samlSpEntityId">SP Entity ID (Your Identifier) <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control" id="samlSpEntityId" name="samlSpEntityId" placeholder="http://localhost:8080/sso/saml/metadata" required>
+                            <p class="small-text">**Provide this URL to your IdP.** This identifies your application.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="samlAcsUrl">Assertion Consumer Service URL (ACS) <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control" id="samlAcsUrl" name="samlAcsUrl" placeholder="http://localhost:8080/sso/saml/callback" required>
+                            <p class="small-text">**Provide this URL to your IdP.** Where the IdP sends the SAML response.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="samlCertificate">IdP X.509 Certificate <span style="color:red;">*</span></label>
+                            <textarea class="form-control" id="samlCertificate" name="samlCertificate" placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----" required></textarea>
+                            <p class="small-text">The public key certificate from the IdP for verifying SAML responses.</p>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save SAML Configuration</button>
+                        <button type="button" class="btn btn-test" onclick="testSAML()"><i class="fas fa-vial"></i> Test SAML SSO</button>
+                    </form>
+                </div>
+
+                <div id="oauth" class="form-section">
+                    <h4>OAuth 2.0 Configuration Details</h4>
+                    <form id="oauthForm">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="oauthEnabled" name="enabled">
+                            <label class="form-check-label" for="oauthEnabled">Activate **OAuth** Login</label>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="oauthAuthorizationUrl">Authorization URL <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control" id="oauthAuthorizationUrl" name="oauthAuthorizationUrl" placeholder="https://login.xecurify.com/moas/idp/oauth/authorize" required>
+                            <p class="small-text">The IdP's endpoint for initiating the authorization flow.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="oauthTokenUrl">Token URL <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control" id="oauthTokenUrl" name="oauthTokenUrl" placeholder="https://login.xecurify.com/moas/idp/oauth/token" required>
+                            <p class="small-text">The IdP's endpoint for exchanging the authorization code for tokens.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="oauthUserInfoUrl">User Info URL <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control" id="oauthUserInfoUrl" name="oauthUserInfoUrl" placeholder="https://login.xecurify.com/moas/idp/userinfo" required>
+                            <p class="small-text">The IdP's endpoint for retrieving user profile information.</p>
+                        </div>
+
+                        <hr style="border-top: 1px dashed var(--border-color); margin: 30px 0;">
+
+                        <div class="form-group">
+                            <label for="oauthClientId">Client ID <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control" id="oauthClientId" name="oauthClientId" placeholder="your-client-id" required>
+                            <p class="small-text">The ID assigned to your application (SP) by the IdP.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="oauthClientSecret">Client Secret <span style="color:red;">*</span></label>
+                            <input type="password" class="form-control" id="oauthClientSecret" name="oauthClientSecret" placeholder="your-client-secret" required>
+                            <p class="small-text">The secret key used to authenticate your application.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="oauthRedirectUri">Redirect URI (Callback URL) <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control" id="oauthRedirectUri" name="oauthRedirectUri" placeholder="http://localhost:8080/sso/oauth/callback" required>
+                            <p class="small-text">**Provide this URL to your IdP.** The authorized redirect endpoint in your application.</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="oauthScopes">Scopes</label>
+                            <input type="text" class="form-control" id="oauthScopes" name="oauthScopes" placeholder="openid,profile,email" value="openid,profile,email">
+                            <p class="small-text">List of requested permissions/data fields from the user, separated by commas.</p>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save OAuth Configuration</button>
+                        <button type="button" class="btn btn-test" onclick="testOAuth()"><i class="fas fa-vial"></i> Test OAuth Connection</button>
+                    </form>
+                </div>
+            </div> <div id="alertContainer"></div>
+
+        </div> </div>
+</div>
+
+<script>
+    // --- JavaScript Logic (unchanged for tab switching functionality) ---
+
+    const token = localStorage.getItem('authToken');
+    // Simplified redirect for demo purposes
+    // if (!token) window.location.href = '/login.html'; 
+
+    // Tab switching
+    document.querySelectorAll('.nav-link').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.nav-link').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // This is crucial: remove active class from all form-sections, 
+            // and only show the one matching the clicked tab's data-section.
+            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(this.dataset.section).classList.add('active');
+        });
+    });
+
+    // Mock functions for API interaction and testing
+    async function loadSSOConfig() {
+        // Placeholder for API call to load settings
+        console.log('Loading SSO configuration from API...');
+    }
+
+    // Function to handle form data population (simplified)
+    function populateForm(config) { /* ... implementation ... */ }
+
+    // Form submit handlers
+    ['jwtForm','samlForm','oauthForm'].forEach(id => {
+        document.getElementById(id).addEventListener('submit', async e => {
+            e.preventDefault();
+            const provider = id.replace('Form','').toUpperCase();
+            const submitBtn = e.target.querySelector('.btn-primary');
+            const originalHtml = submitBtn.innerHTML;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            
+            // Mock API delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Mock success/failure
+            const data = Object.fromEntries(new FormData(e.target));
+            if (data.enabled === 'on' && data[`${provider.toLowerCase()}Url`] && data[`${provider.toLowerCase()}Url`].includes('xecurify')) {
+                showAlert(`Configuration for **${provider}** successfully saved!`, 'success');
+            } else {
+                 showAlert(`**${provider}** Save failed. Please check all required fields.`, 'error');
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalHtml;
+        });
+    });
+
+    function testJWT(){ window.open('/sso/jwt/login','_blank'); }
+    function testSAML(){ window.open('/sso/saml/login','_blank'); }
+    function testOAuth(){ window.open('/sso/oauth/login','_blank'); }
+
+    function showAlert(msg,type){
+        const c = document.getElementById('alertContainer');
+        c.innerHTML=`<div class="alert ${type==='success'?'alert-success':'alert-error'}">
+                        <i class="fas ${type==='success' ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                        ${msg}
+                    </div>`;
+        const a=c.querySelector('.alert'); a.style.display='flex';
+        setTimeout(()=>a.style.display='none',7000);
+    }
+
+    loadSSOConfig();
+</script>
+</body>
+</html>

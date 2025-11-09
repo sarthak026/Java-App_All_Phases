@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #1e3a8a; /* Deep Navy Blue */
+            --primary-color-dark: #1e40af;
+            --primary-light: #eff6ff;
+            --text-dark: #1f2937;
+            --text-medium: #6b7280;
+            --bg-page: #f9fafb;
+            --bg-card: white;
+            --border-color: #e5e7eb;
+            --shadow-subtle: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-page);
+        }
+
+        /* -------------------------------------- */
+        /* --- NEW VERTICAL DASHBOARD LAYOUT --- */
+        /* -------------------------------------- */
+
+        .dashboard-wrapper {
+            display: flex; /* Makes sidebar and main content side-by-side */
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px; /* Fixed width for the vertical sidebar */
+            background-color: var(--primary-color); /* Deep Navy Blue background */
+            color: white; /* White text for contrast */
+            padding: 20px;
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Pushes user info/logout to the bottom */
+            flex-shrink: 0; /* Prevents shrinking */
+        }
+
+        .main-content {
+            flex-grow: 1; /* Takes up all remaining horizontal space */
+            background-color: var(--bg-page);
+        }
+
+        /* Adjust main container margin to fit inside main-content */
+        .container {
+            max-width: 100%; /* Important: Remove max-width constraint for this context */
+            margin: 40px; /* Consistent margin around content */
+            padding: 0; /* No internal padding */
+        }
+
+        /* -------------------------------------- */
+        /* --- SIDEBAR COMPONENTS (MODIFIED) --- */
+        /* -------------------------------------- */
+
+        /* Brand (Header of Sidebar) */
+        .navbar-brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: white; /* White text */
+            margin-bottom: 30px; /* Space before navigation links */
+            padding: 0;
+            display: block;
+        }
+        .navbar-brand i {
+            margin-right: 8px;
+        }
+
+        /* Navigation Links (Modified from horizontal .tabs) */
+        .tabs {
+            display: flex;
+            flex-direction: column; /* Stack vertically */
+            gap: 0;
+            margin-bottom: 30px;
+            border-bottom: none; /* Remove bottom border */
+        }
+
+        .tab {
+            padding: 12px 15px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7); /* Lighter white for inactive */
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            border-left: 3px solid transparent; /* Highlight on the left */
+            transition: all 0.2s;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .tab.active {
+            color: white; /* White for active link */
+            background-color: var(--primary-color-dark); /* Darker blue background */
+            border-left-color: white; /* White highlight bar */
+            font-weight: 600;
+        }
+
+        .tab:hover:not(.active) {
+            color: white;
+            background-color: rgba(0, 0, 0, 0.15); /* Subtle hover on inactive */
+        }
+        
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+
+        /* User Info and Logout (Footer of Sidebar) */
+        .navbar-user {
+            display: block; /* Ensures stacking */
+            align-items: center;
+            /* Pushes this section to the bottom of the sidebar */
+            margin-top: auto; 
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-info {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .user-email {
+            font-size: 14px;
+            color: white; /* White text */
+            font-weight: 500;
+        }
+
+        .user-role {
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.2); /* Light transparent background */
+            color: white; /* White text */
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-top: 4px;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.1); /* Subtle button background */
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white; /* White text */
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            width: 100%; /* Full width in the sidebar */
+            display: block;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: white;
+            color: white;
+        }
+
+
+        /* -------------------------------------- */
+        /* --- MAIN CONTENT COMPONENTS --- */
+        /* -------------------------------------- */
+
+        /* Existing Styles (No major change, but adjust margins) */
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .page-header p {
+            color: var(--text-medium);
+            font-size: 15px;
+        }
+
+        /* --- Stats Grid (Ensuring Vertical Layout) --- */
+        .stats-grid {
+            /* Remove grid for a vertical stack of block elements */
+            display: block; 
+            /* gap: 20px; <-- Remove if you only rely on margin-bottom */
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            margin-bottom: 20px; /* Adds space between the now stacked cards */
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 24px;
+            box-shadow: var(--shadow-subtle);
+            border-left: 4px solid var(--primary-color);
+            transition: transform 0.3s;
+        }
+        /* ... (rest of your existing styles are kept below, no changes needed) ... */
+        
+        /* --- Other Existing Styles (Kept for completeness) --- */
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: var(--shadow-subtle);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        /* --- Buttons --- */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 3px 8px rgba(30, 58, 138, 0.3); /* Adjust shadow color for blue */
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            background-color: var(--primary-color-dark);
+            box-shadow: 0 5px 12px rgba(30, 58, 138, 0.5);
+        }
+        
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-small { padding: 6px 12px; font-size: 12px; }
+
+        /* --- Table --- */
+        table { width: 100%; border-collapse: collapse; }
+        th { background: var(--bg-page); padding: 12px; text-align: left; font-weight: 600; color: var(--text-dark); border-bottom: 2px solid var(--border-color); }
+        td { padding: 12px; border-bottom: 1px solid #f0f0f0; color: var(--text-dark); }
+        tr:hover { background: var(--primary-light); }
+        .badge { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+
+        /* --- Modal --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--bg-card); border-radius: 10px; padding: 30px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
+        .modal-header { font-size: 22px; font-weight: 700; margin-bottom: 20px; color: var(--text-dark); border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; color: var(--text-dark); font-weight: 600; font-size: 14px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; background: var(--bg-page); }
+        .form-group input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px var(--primary-light); background: white; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--text-medium); font-size: 16px; }
+        .empty-state i { font-size: 32px; margin-bottom: 10px; color: var(--border-color); }
+        .action-buttons { display: flex; gap: 8px; }
+
+        /* --- Alerts --- */
+        .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+        .alert-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .alert-error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .alert i { font-size: 16px; }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); /* Updated to a simple hover shadow */
+        }
+        
+    </style>
+</head>
+<body>
+    
+    <div class="dashboard-wrapper">
+        
+        <div class="sidebar">
+            <div>
+                <div class="navbar-brand"><i class="fas fa-tachometer-alt"></i> Admin Portal</div>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('endUsers')">
+                        <i class="fas fa-users"></i> End Users
+                    </button>
+                    <button class="tab" onclick="window.location.href='/sso-settings.html'">
+                        <i class="fas fa-lock"></i> SSO Configuration
+                    </button>
+                    <button class="tab" onclick="alert('Feature coming soon')">
+                        <i class="fas fa-bug"></i> Report a Bug
+                    </button>
+                    <button class="tab" onclick="alert('Contact Admin clicked')">
+                        <i class="fas fa-headset"></i> Contact Admin
+                    </button>
+                </div>
+            </div>
+
+            <div class="navbar-user">
+                <div class="user-info">
+                    <div class="user-email" id="userEmail">Loading...</div>
+                    <div class="user-role"><i class="fas fa-crown"></i> CUSTOMER ADMIN</div>
+                </div>
+                <button class="btn-logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="container">
+                <div class="page-header">
+                    <h1>Welcome Back!</h1>
+                    <p>Your centralized hub to manage end users and SSO integrations for your tenant.</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalUsers">0</div>
+                        <div class="stat-label">Total End Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="activeUsers">0</div>
+                        <div class="stat-label">Active Users</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="pendingInvitations">0</div>
+                        <div class="stat-label">Pending Invitations</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="activeSSOProtocols">0</div>
+                        <div class="stat-label">Active SSO Protocols</div>
+                    </div>
+                </div>
+
+                <div id="endUsers" class="tab-content active">
+                    <div id="alertContainer"></div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fas fa-user-friends"></i> User Management</h2>
+                            <button class="btn btn-primary" onclick="openCreateModal()">
+                                <i class="fas fa-user-plus"></i> Add End User
+                            </button>
+                        </div>
+
+                        <table id="endUsersTable">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Email</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="endUsersBody">
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Loading end users...</p>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="ssoConfig" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title"><i class="fas fa-cog"></i> SSO Configuration Overview</h2>
+                            <a href="/sso-settings.html" class="btn btn-primary">
+                                <i class="fas fa-tools"></i> Configure SSO
+                            </a>
+                        </div>
+
+                        <div id="ssoConfigContent">
+                            <p style="text-align: center; color: var(--text-medium); padding: 40px;">
+                                <i class="fas fa-info-circle" style="font-size: 24px; margin-bottom: 10px;"></i>
+                                <br>
+                                Click **Configure SSO** to manage your identity provider settings (JWT, SAML, OAuth).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div> <div id="endUserModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-header" id="modalTitle">Add End User</h3>
+            <form id="endUserForm">
+                <input type="hidden" id="userId">
+
+                <div class="form-group">
+                    <label for="firstName">First Name *</label>
+                    <input type="text" id="firstName" required placeholder="John">
+                </div>
+
+                <div class="form-group">
+                    <label for="lastName">Last Name *</label>
+                    <input type="text" id="lastName" required placeholder="Doe">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" required placeholder="john.doe@yourcompany.com">
+                </div>
+
+                <div class="form-group" id="passwordGroup">
+                    <label for="password">Password *</label>
+                    <input type="password" id="password" placeholder="Set initial password">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeModal()"><i class="fas fa-times"></i> Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('authToken');
+        const userRole = localStorage.getItem('userRole');
+        const userEmail = localStorage.getItem('userEmail');
+
+        if (!token || (userRole !== 'CUSTOMER_ADMIN' && userRole !== 'SUPER_ADMIN')) {
+            window.location.href = 'login.html';
+        }
+
+        document.getElementById('userEmail').textContent = userEmail;
+
+        // Load data on page load
+        loadEndUsers();
+        loadSSOStats();
+        // Note: loadPendingInvitations is now handled within loadEndUsers
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            // Update the visual state of the sidebar links (tabs)
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            // Find the button element corresponding to the tabName and activate it
+            document.querySelector(`.tab[onclick*="${tabName}"]`).classList.add('active');
+        }
+
+        // Load end users
+        async function loadEndUsers() {
+            try {
+                const response = await fetch('/api/customer-admin/end-users', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const endUsers = await response.json();
+                    displayEndUsers(endUsers);
+                    updateStats(endUsers);
+                } else if (response.status === 401) {
+                    logout();
+                } else {
+                    showAlert('Failed to load end users', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading end users:', error);
+                showAlert('Network error while loading data', 'error');
+            }
+        }
+
+        function displayEndUsers(endUsers) {
+            const tbody = document.getElementById('endUsersBody');
+
+            if (endUsers.length === 0) {
+                tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <i class="fas fa-users-slash"></i>
+                                <p>No end users have been created yet. Click "Add End User" to get started.</p>
+                            </td>
+                        </tr>
+                    `;
+                return;
+            }
+
+            tbody.innerHTML = endUsers.map(user => `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.email}</td>
+                            <td>${user.firstName} ${user.lastName}</td>
+                            <td>
+                                <span class="badge ${user.active ? 'badge-success' : 'badge-danger'}">
+                                    ${user.active ? 'Active' : 'Inactive'}
+                                </span>
+                            </td>
+                            <td>${new Date(user.createdAt || Date.now()).toLocaleDateString()}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-small btn-success" onclick="editEndUser(${user.id})" title="Edit User">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                    <button class="btn btn-small btn-danger" onclick="deleteEndUser(${user.id})" title="Delete User">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+        }
+
+        function updateStats(endUsers) {
+            document.getElementById('totalUsers').textContent = endUsers.length;
+            const activeCount = endUsers.filter(u => u.active).length;
+            const pendingCount = endUsers.filter(u => !u.active).length;
+
+            document.getElementById('activeUsers').textContent = activeCount;
+            document.getElementById('pendingInvitations').textContent = pendingCount;
+        }
+
+        /**
+         * Fetches SSO configurations and calculates the number of active protocols.
+         */
+        async function loadSSOStats() {
+            try {
+                const response = await fetch('/api/sso/config', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const configs = await response.json();
+                    // Filter for protocols where 'enabled' is true
+                    const activeCount = configs.filter(c => c.enabled).length;
+                    document.getElementById('activeSSOProtocols').textContent = activeCount;
+                } else {
+                    document.getElementById('activeSSOProtocols').textContent = 'N/A';
+                }
+            } catch (error) {
+                console.error('Error loading SSO stats:', error);
+                document.getElementById('activeSSOProtocols').textContent = 'Error';
+            }
+        }
+
+        function openCreateModal() {
+            document.getElementById('modalTitle').textContent = 'Add New End User';
+            document.getElementById('endUserForm').reset();
+            document.getElementById('userId').value = '';
+            document.getElementById('passwordGroup').style.display = 'block';
+            document.getElementById('password').required = true;
+            document.getElementById('email').readOnly = false;
+            document.getElementById('endUserModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('endUserModal').classList.remove('show');
+        }
+
+        // Handle form submission
+        document.getElementById('endUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = document.querySelector('#endUserModal .btn-primary');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+
+            const userId = document.getElementById('userId').value;
+            const isEdit = userId !== '';
+
+            const formData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                role: 'END_USER'
+            };
+
+            const passwordInput = document.getElementById('password').value;
+            if (!isEdit && passwordInput) {
+                formData.password = passwordInput;
+            }
+
+
+            try {
+                const url = isEdit
+                    ? `/api/customer-admin/end-users/${userId}`
+                    : '/api/customer-admin/end-users';
+
+                const method = isEdit ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    showAlert(`End user ${isEdit ? 'updated' : 'created'} successfully!`, 'success');
+                    closeModal();
+                    loadEndUsers();
+                } else {
+                    const error = await response.json();
+                    showAlert(error.error || 'Operation failed', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Network error', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Save';
+            }
+        });
+
+        async function editEndUser(userId) {
+            document.getElementById('modalTitle').textContent = 'Edit End User';
+            document.getElementById('userId').value = userId;
+
+            // Hide password group for edit
+            document.getElementById('passwordGroup').style.display = 'none';
+            document.getElementById('password').required = false;
+            document.getElementById('email').readOnly = true;
+
+            // Fetch user data for pre-filling
+            try {
+                const response = await fetch(`/api/customer-admin/end-users/${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('firstName').value = user.firstName;
+                    document.getElementById('lastName').value = user.lastName;
+                    document.getElementById('email').value = user.email;
+                } else {
+                    showAlert('Failed to fetch user data for edit.', 'error');
+                    return;
+                }
+            } catch(error) {
+                showAlert('Network error fetching user data.', 'error');
+                return;
+            }
+
+            document.getElementById('endUserModal').classList.add('show');
+        }
+
+        async function deleteEndUser(userId) {
+            if (!confirm('Are you sure you want to delete this end user? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/customer-admin/end-users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    showAlert('End user deleted successfully!', 'success');
+                    loadEndUsers();
+                } else {
+                    const error = await response.json();
+                    showAlert(error.error || 'Failed to delete end user', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Network error', 'error');
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-times-circle';
+
+            alertContainer.innerHTML = `
+                        <div class="alert ${alertClass}">
+                            <i class="fas ${iconClass}"></i>
+                            ${message}
+                        </div>
+                    `;
+
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userEmail');
+            window.location.href = 'login.html';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('endUserModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

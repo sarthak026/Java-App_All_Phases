@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End User Dashboard</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Professional Blue & White Theme Variables */
+        :root {
+            --primary-blue: #1e3a8a; /* Deep Professional Blue */
+            --secondary-blue: #1e40af; /* Bright Accent Blue */
+            --bg-page: #f0f4f7; /* Very light subtle background */
+            --bg-card: #ffffff; /* White card background */
+            --text-dark: #212529; /* Dark text for contrast */
+            --text-muted: #6c757d;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --shadow-elevation: 0 6px 20px rgba(0, 0, 0, 0.15); /* More prominent shadow */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-page);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        /* --- Navbar Styling --- */
+        .navbar {
+            /* Solid background matching the professional blue */
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            border-bottom: 3px solid var(--secondary-blue); /* Subtle accent line */
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .navbar-brand i { color: white; margin-right: 8px; }
+
+        .user-role {
+            font-size: 12px;
+            background: var(--secondary-blue);
+            padding: 4px 12px;
+            border-radius: 12px;
+            margin-top: 4px;
+            display: inline-block;
+            font-weight: 600;
+            color: white;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: white;
+            color: var(--primary-blue);
+        }
+
+        /* --- Layout & Structure --- */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .section-header {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            border-left: 4px solid var(--primary-blue);
+            padding-left: 15px;
+            margin-top: 40px;
+        }
+        .section-header i { color: var(--secondary-blue); margin-right: 10px; }
+
+
+        /* --- Welcome Card (High Contrast) --- */
+        .welcome-card {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: var(--shadow-elevation);
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Geometric Element for professional style */
+        .welcome-card:before {
+            content: "";
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(45deg);
+        }
+
+        .welcome-card h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: var(--bg-card); /* Pure white text on dark card */
+        }
+
+        .welcome-card p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 18px;
+        }
+
+        .welcome-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .tenant-badge {
+            display: inline-block;
+            background: white;
+            color: var(--primary-blue);
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- Info Card Styling --- */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* Slightly wider info cards */
+            gap: 20px;
+        }
+
+        .info-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Lighter shadow for inner cards */
+            border: 1px solid var(--border-color); /* Defined border */
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .info-card:hover { 
+            transform: translateY(-3px); 
+            border-color: var(--secondary-blue); /* Highlight on hover */
+        }
+
+        .info-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        .info-card h3 i { color: var(--primary-blue); }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed var(--border-color); /* Dashed lines for clarity */
+            font-size: 15px;
+        }
+
+        .info-item:last-child { border-bottom: none; }
+
+        .info-label { color: var(--text-muted); font-weight: 400; }
+
+        .info-value { color: var(--text-dark); font-weight: 600; }
+        .info-value[style*="#4CAF50"] { color: #28a745 !important; } 
+        .info-value[style*="#dc3545"] { color: #dc3545 !important; }
+
+
+        /* --- Recent Activities (Vertical List) --- */
+        .activity-list {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 15px;
+        }
+        .activity-item:last-child { border-bottom: none; }
+
+        .activity-item .icon {
+            font-size: 18px;
+            margin-right: 15px;
+            color: var(--primary-blue);
+        }
+
+        .activity-item .text {
+            flex-grow: 1;
+        }
+
+        .activity-item .timestamp {
+            margin-left: 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        
+        /* --- Feature Card Styling --- */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-elevation);
+            border-color: var(--primary-blue);
+        }
+
+        .feature-icon {
+            font-size: 36px;
+            margin-bottom: 15px;
+            color: var(--primary-blue);
+            transition: color 0.3s;
+        }
+        .feature-card:hover .feature-icon {
+            color: var(--secondary-blue);
+        }
+
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .feature-description {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="navbar-brand">
+        <i class="fas fa-cube"></i> SarApp Dashboard
+    </div>
+    <div class="navbar-user">
+        <div class="user-info">
+            <div class="user-email" id="userEmail">Loading...</div>
+            <div class="user-role">END USER</div>
+        </div>
+        <button class="btn-logout" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="welcome-card">
+        <div class="welcome-icon"><i class="fas fa-hand-sparkles"></i></div>
+        <h1>Welcome Back to SarApp!</h1>
+        <p>Your secure, personalized End User workspace is fully operational.</p>
+        <div class="tenant-badge" id="tenantBadge">Loading tenant...</div>
+    </div>
+
+    <div class="section-header">
+        <i class="fas fa-clipboard-check"></i> Account Summary
+    </div>
+    <div class="info-grid">
+        <div class="info-card">
+            <h3><i class="fas fa-id-badge"></i> Profile Details</h3>
+            <div class="info-item">
+                <span class="info-label">Email Address:</span>
+                <span class="info-value" id="userEmailInfo">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Access Role:</span>
+                <span class="info-value">End User</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Organization (Tenant):</span>
+                <span class="info-value" id="userTenant">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Account Status:</span>
+                <span class="info-value" style="color: #4CAF50;">Verified</span>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h3><i class="fas fa-shield-alt"></i> Security & Activity</h3>
+            <div class="info-item">
+                <span class="info-label">Last Login:</span>
+                <span class="info-value" id="lastLogin">Just now</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">2FA Enabled:</span>
+                <span class="info-value" style="color: #dc3545;">No</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Password Policy:</span>
+                <span class="info-value">Strong</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Active Sessions:</span>
+                <span class="info-value">1</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-header">
+        <i class="fas fa-history"></i> Recent System Activities
+    </div>
+    <div class="activity-list" id="activityList">
+        </div>
+
+    <div class="section-header">
+        <i class="fas fa-tachometer-alt"></i> Workspace Quick Links
+    </div>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-user-circle"></i></div>
+            <div class="feature-title">My Profile</div>
+            <div class="feature-description">Update contact and security details.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-lock"></i></div>
+            <div class="feature-title">Security Setup</div>
+            <div class="feature-description">Manage password and two-factor auth.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-envelope-open-text"></i></div>
+            <div class="feature-title">Notifications</div>
+            <div class="feature-description">Customize alert preferences.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-list-alt"></i></div>
+            <div class="feature-title">Activity Log</div>
+            <div class="feature-description">Review access and system history.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-file-pdf"></i></div>
+            <div class="feature-title">Documentation</div>
+            <div class="feature-description">Access user guides and resources.</div>
+        </div>
+
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-headset"></i></div>
+            <div class="feature-title">Support Desk</div>
+            <div class="feature-description">Submit tickets and get assistance.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Mock Data for Recent Activities
+    const mockActivities = [
+        { icon: 'fas fa-check-circle', text: "Successfully logged in to the dashboard.", timestamp: "1 min ago" },
+        { icon: 'fas fa-map-marker-alt', text: "Access granted from new IP address (104.1.2.3).", timestamp: "5 hours ago" },
+        { icon: 'fas fa-cog', text: "Updated timezone setting in preferences.", timestamp: "Yesterday" },
+        { icon: 'fas fa-file-download', text: "Downloaded documentation: 'User Guide V2.0'.", timestamp: "2 days ago" },
+    ];
+
+    function renderActivities() {
+        const list = document.getElementById('activityList');
+        list.innerHTML = mockActivities.map(activity => `
+            <div class="activity-item">
+                <span class="icon"><i class="${activity.icon}"></i></span>
+                <span class="text">${activity.text}</span>
+                <span class="timestamp">${activity.timestamp}</span>
+            </div>
+        `).join('');
+    }
+
+    // --- Core JavaScript Logic ---
+
+    // Mock/Auth Setup
+    if (!localStorage.getItem('userEmail')) {
+        localStorage.setItem('userEmail', 'jane.doe@acmecorp.com');
+        localStorage.setItem('userRole', 'END_USER');
+    }
+
+    const token = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
+    const userEmail = localStorage.getItem('userEmail');
+
+    // Display user information
+    document.getElementById('userEmail').textContent = userEmail || 'user@example.com';
+    document.getElementById('userEmailInfo').textContent = userEmail || 'user@example.com';
+
+    // Get tenant from subdomain
+    const hostname = window.location.hostname;
+    let subdomain = hostname.split('.')[0];
+    if (subdomain === 'localhost' || subdomain.length < 3) {
+        subdomain = 'ACME-CORP'; // Consistent professional fallback
+    }
+    document.getElementById('tenantBadge').textContent = `Tenant: ${subdomain}`;
+    document.getElementById('userTenant').textContent = subdomain;
+
+    // Update last login time
+    const now = new Date();
+    document.getElementById('lastLogin').textContent = now.toLocaleString();
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userEmail');
+            alert('Logged out! (Redirect to login.html would happen here)');
+            window.location.href = 'login.html';
+        }
+    }
+
+    // Add click handlers for feature cards
+    document.querySelectorAll('.feature-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const title = this.querySelector('.feature-title').textContent;
+            alert(`${title} feature coming soon!`);
+        });
+    });
+
+    // Render activities on load
+    window.onload = renderActivities;
+</script>
+</body>
+</html>
