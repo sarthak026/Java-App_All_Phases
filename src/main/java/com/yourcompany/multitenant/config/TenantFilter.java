@@ -5,16 +5,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 
 @Slf4j
 @Component
 public class TenantFilter implements Filter {
 
-    // SUPER ADMIN tenant ID is always "1"
+    // SUPER ADMIN tenant ID always "1"
     public static final String SUPER_ADMIN_ID = "1";
 
+    // Your root domain (example: sarthak.cfd)
     @Value("${app.base.domain:localhost}")
     private String baseDomain;
 
@@ -24,22 +24,21 @@ public class TenantFilter implements Filter {
 
         HttpServletRequest req = (HttpServletRequest) request;
 
-        // 🟢 REAL DOMAIN FIX FOR RENDER
+        // 🔥 Fix for Render / Reverse Proxy
         String serverName = req.getHeader("X-Forwarded-Host");
         if (serverName == null || serverName.isEmpty()) {
             serverName = req.getServerName();
         }
 
-        log.debug("TenantFilter detected server name: {}", serverName);
+        log.debug("TenantFilter host detected: {}", serverName);
 
-        // Resolve tenant ID
         String tenantId = resolveTenantId(serverName);
 
         if (tenantId != null) {
-            log.debug("Setting TenantContext to {}", tenantId);
+            log.debug("TenantContext set → {}", tenantId);
             TenantContext.setTenantId(tenantId);
         } else {
-            log.warn("Could not determine tenant from server name: {}", serverName);
+            log.warn("Tenant could NOT be resolved from domain: {}", serverName);
         }
 
         try {
@@ -49,57 +48,65 @@ public class TenantFilter implements Filter {
         }
     }
 
-    // 🟢 Tenant resolver
+    // 🔍 MAIN TENANT RESOLVER
     private String resolveTenantId(String serverName) {
-        if (serverName == null) {
-            return null;
-        }
+        if (serverName == null) return null;
 
-        // Super Admin handling (base domain)
-        if (isBaseDomain(serverName)) {
-            log.debug("Base domain detected → SUPER ADMIN tenant (1)");
-            return SUPER_ADMIN_ID;
-        }
-
-        // Localhost fallback
+        // Localhost → superadmin
         if (serverName.equals("127.0.0.1") || serverName.equalsIgnoreCase("localhost")) {
-            log.debug("Localhost → SUPER ADMIN tenant (1)");
             return SUPER_ADMIN_ID;
         }
 
-        // Tenant subdomain
+        // Root/base domain → superadmin
+        if (isBaseDomain(serverName)) {
+            return SUPER_ADMIN_ID;
+        }
+
+        // Subdomain → tenant
         String subdomain = extractSubdomain(serverName);
         if (subdomain != null && !subdomain.isEmpty()) {
-            log.debug("Subdomain detected → tenant {}", subdomain);
             return subdomain;
         }
 
         return null;
     }
 
+    // 🟢 CHECK BASE DOMAIN (sarthak.cfd)
     private boolean isBaseDomain(String serverName) {
+
+        // Handle www.sarthak.cfd as base domain too
+        if (serverName.equalsIgnoreCase("www." + baseDomain)) {
+            return true;
+        }
+
         return serverName.equalsIgnoreCase(baseDomain);
     }
 
+    // 🟢 EXTRACT TENANT SUBDOMAIN: him.sarthak.cfd → "him"
     private String extractSubdomain(String serverName) {
+
+        // Ignore IP addresses
         if (serverName.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$")) {
-            return null; // IP address
+            return null;
         }
 
         String[] parts = serverName.split("\\.");
         String[] baseParts = baseDomain.split("\\.");
 
-        if (parts.length <= baseParts.length) {
-            return null;
+        // Subdomain ONLY if parts = baseParts + 1
+        // Example: him.sarthak.cfd → 3 parts, baseDomain = 2 parts
+        if (parts.length != baseParts.length + 1) {
+            return null; // prevents sarthak.cfd from becoming tenant=sarthak
         }
 
-        // Ensure end matches the base domain
+        // Check end matches baseDomain
         for (int i = 0; i < baseParts.length; i++) {
             if (!parts[parts.length - baseParts.length + i].equalsIgnoreCase(baseParts[i])) {
                 return null;
             }
         }
 
-        return parts[0]; // return subdomain
+        // Return first segment → tenant
+        return parts[0];
     }
 }
