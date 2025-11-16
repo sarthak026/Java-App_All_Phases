@@ -1,7 +1,7 @@
-// TenantContext.java
 package com.yourcompany.multitenant.config;
 
 public class TenantContext {
+
     private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();
 
     public static void setTenantId(String tenantId) {
