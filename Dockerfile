@@ -1,55 +1,35 @@
-# ===========================================
-# Multi-stage build for optimized image size
-# ===========================================
+# ----- Stage 1: Build -----
+# Use a base image with Java 17 JDK (matching your pom.xml)
+FROM eclipse-temurin:17-jdk-jammy AS builder
 
-# ---------- Stage 1: Build the application ----------
-FROM maven:3.9.11-eclipse-temurin-17-alpine AS build
-
-# Set working directory
+# Set the working directory inside the image
 WORKDIR /app
 
-# Copy Maven wrapper and configuration
-COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw .
-COPY mvnw.cmd .
+# --- THIS IS THE FIX ---
+# Copy everything from the repository root (where pom.xml is)
+# into the /app directory in the image.
+COPY . .
 
-# Download dependencies first (layer caching)
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
+# Grant execute permission to the maven wrapper
+RUN chmod +x ./mvnw
 
-# Copy application source code
-COPY src ./src
-
-# Build the Spring Boot JAR (skip tests for faster build)
+# Build the application, skipping tests
+# This will create the .jar file in /app/target/
 RUN ./mvnw clean package -DskipTests
 
-# ---------- Stage 2: Create the runtime image ----------
-FROM eclipse-temurin:17-jre-alpine
+# ----- Stage 2: Run -----
+# Use a minimal JRE-only image for a smaller final size
+FROM eclipse-temurin:17-jre-jammy
 
-# Set working directory
+# Set the working directory
 WORKDIR /app
 
-# Create a non-root user for security
-RUN addgroup -S spring && adduser -S spring -G spring
+# Copy ONLY the built .jar file from the 'builder' stage
+# The jar name 'demo-0.0.1-SNAPSHOT.jar' comes from your pom.xml
+COPY --from=builder /app/target/multitenant-app-1.0.0.jar app.jar
 
-# Copy the built JAR from the build stage
-COPY --from=build /app/target/*.jar app.jar
+# Expose the port your Spring Boot app runs on (default 8080)
+EXPOSE 8080
 
-# Change ownership to non-root user
-RUN chown spring:spring app.jar
-
-# Switch to non-root user
-USER spring:spring
-
-# Expose the application port (as per application.properties)
-EXPOSE 9090
-
-# Set JVM options for containerized environments
-ENV JAVA_OPTS="-Xmx512m -Xms256m"
-
-# Optional health check — update endpoint if needed
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:9090/actuator/health || exit 1
-
-# Run the Spring Boot application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+# The command to run your application
+ENTRYPOINT ["java", "-jar", "app.jar"]
