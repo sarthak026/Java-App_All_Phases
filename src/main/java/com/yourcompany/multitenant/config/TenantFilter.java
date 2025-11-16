@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 
 @Slf4j
@@ -14,7 +15,7 @@ public class TenantFilter implements Filter {
     // SUPER ADMIN tenant ID
     public static final String SUPER_ADMIN_ID = "1";
 
-    // Base domain (example: sarthak.cfd)
+    // Base domain: example -> sarthak.cfd (configured in application.yml)
     @Value("${app.base.domain:localhost}")
     private String baseDomain;
 
@@ -24,21 +25,20 @@ public class TenantFilter implements Filter {
 
         HttpServletRequest req = (HttpServletRequest) request;
 
-        // Handle proxies (Render, Cloudflare)
-        String serverName = req.getHeader("X-Forwarded-Host");
-        if (serverName == null || serverName.isEmpty()) {
-            serverName = req.getServerName();
+        String host = req.getHeader("X-Forwarded-Host");
+        if (host == null || host.isEmpty()) {
+            host = req.getServerName();
         }
 
-        log.debug("TenantFilter - Detected host: {}", serverName);
+        log.debug("TenantFilter - Host detected: {}", host);
 
-        String tenantId = resolveTenantId(serverName);
+        String tenantId = resolveTenantId(host);
 
         if (tenantId != null) {
-            log.debug("Tenant resolved → {}", tenantId);
+            log.debug("Tenant resolved = {}", tenantId);
             TenantContext.setTenantId(tenantId);
         } else {
-            log.warn("Tenant could NOT be resolved for domain: {}", serverName);
+            log.warn("Tenant could NOT be resolved for host: {}", host);
         }
 
         try {
@@ -48,60 +48,68 @@ public class TenantFilter implements Filter {
         }
     }
 
-    // MAIN tenant resolver
-    private String resolveTenantId(String serverName) {
-        if (serverName == null) return null;
+    /**
+     * Resolve tenant ID based on host rules:
+     * - base domain -> SUPERADMIN
+     * - subdomain.baseDomain -> subdomain
+     */
+    private String resolveTenantId(String host) {
 
-        // Local environment
-        if (serverName.equals("127.0.0.1") || serverName.equalsIgnoreCase("localhost")) {
+        if (host == null) return null;
+
+        host = host.toLowerCase();
+
+        // Local dev -> SUPERADMIN
+        if (host.equals("localhost") || host.equals("127.0.0.1")) {
             return SUPER_ADMIN_ID;
         }
 
-        // EXACT DOMAIN or www.DOMAIN = SUPERADMIN
-        if (isBaseDomain(serverName)) {
+        // Direct match to base domain -> SUPERADMIN
+        if (isBaseDomain(host)) {
             return SUPER_ADMIN_ID;
         }
 
-        // SUBDOMAIN.ROOTDOMAIN → TENANT
-        String subdomain = extractSubdomain(serverName);
-        if (subdomain != null && !subdomain.isBlank()) {
+        // Resolve subdomain tenant
+        String subdomain = resolveSubdomainTenant(host);
+        if (subdomain != null) {
             return subdomain;
         }
 
-        return null;
+        return SUPER_ADMIN_ID; // fallback if needed
     }
 
-    // Check root domain
-    private boolean isBaseDomain(String serverName) {
-        return serverName.equalsIgnoreCase(baseDomain)
-                || serverName.equalsIgnoreCase("www." + baseDomain);
+    private boolean isBaseDomain(String host) {
+        return host.equals(baseDomain)
+                || host.equals("www." + baseDomain);
     }
 
-    // Extract tenant → him.sarthak.cfd → him
-    private String extractSubdomain(String serverName) {
+    /**
+     * Extract tenant → sarthak.sarthak.cfd → sarthak
+     * Only when host has exactly 1 extra part:
+     *   parts = 3, base = 2 → OK
+     */
+    private String resolveSubdomainTenant(String host) {
 
-        // If IP → skip
-        if (serverName.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$")) {
-            return null;
+        if (host.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$")) {
+            return null;  // skip IPs
         }
 
-        String[] parts = serverName.split("\\.");
+        String[] hostParts = host.split("\\.");
         String[] baseParts = baseDomain.split("\\.");
 
-        // Must be exactly 1 part MORE than base domain → prevents mistake
-        if (parts.length != baseParts.length + 1) {
+        // subdomain.baseDomain must have exactly 1 more part
+        if (hostParts.length != baseParts.length + 1) {
             return null;
         }
 
-        // Validate domain end matches baseDomain
+        // Ensure last parts match base domain
         for (int i = 0; i < baseParts.length; i++) {
-            if (!parts[parts.length - baseParts.length + i]
-                    .equalsIgnoreCase(baseParts[i])) {
+            if (!hostParts[hostParts.length - baseParts.length + i].equals(baseParts[i])) {
                 return null;
             }
         }
 
-        // Return first part = tenant id
-        return parts[0];
+        // First part = tenant ID
+        return hostParts[0];
     }
 }
