@@ -362,7 +362,7 @@
 
                         <div class="form-group">
                             <label for="jwtUrl">JWT Login URL <span style="color:red;">*</span></label>
-                            <input type="text" class="form-control" id="jwtUrl" name="jwtUrl" placeholder="https://login.xecurify.com/moas/jwt/login" required>
+                            <input type="text" class="form-control" id="jwtUrl" name="jwtUrl" placeholder="https://sarthakokta.xecurify.com/moas/idp/jwtsso/379425?client_id=pQLHHgAbaZGhZp9fI9jD58C5BhTmcwrO&redirect_uri=https://him.sarthak.cfd/sso/jwt/callback" required>
                             <p class="small-text">The endpoint where users will be redirected to initiate JWT authentication.</p>
                         </div>
 
@@ -416,13 +416,13 @@
 
                         <div class="form-group">
                             <label for="samlSpEntityId">SP Entity ID (Your Identifier) <span style="color:red;">*</span></label>
-                            <input type="text" class="form-control" id="samlSpEntityId" name="samlSpEntityId" placeholder="http://localhost:8080/sso/saml/metadata" required>
+                            <input type="text" class="form-control" id="samlSpEntityId" name="samlSpEntityId" placeholder="http://tenant.sarthak.cfd/sso/saml/metadata" required>
                             <p class="small-text">**Provide this URL to your IdP.** This identifies your application.</p>
                         </div>
 
                         <div class="form-group">
                             <label for="samlAcsUrl">Assertion Consumer Service URL (ACS) <span style="color:red;">*</span></label>
-                            <input type="text" class="form-control" id="samlAcsUrl" name="samlAcsUrl" placeholder="http://localhost:8080/sso/saml/callback" required>
+                            <input type="text" class="form-control" id="samlAcsUrl" name="samlAcsUrl" placeholder="http://tenant.sarthak.cfd/sso/saml/callback" required>
                             <p class="small-text">**Provide this URL to your IdP.** Where the IdP sends the SAML response.</p>
                         </div>
 
@@ -479,7 +479,7 @@
 
                         <div class="form-group">
                             <label for="oauthRedirectUri">Redirect URI (Callback URL) <span style="color:red;">*</span></label>
-                            <input type="text" class="form-control" id="oauthRedirectUri" name="oauthRedirectUri" placeholder="http://localhost:8080/sso/oauth/callback" required>
+                            <input type="text" class="form-control" id="oauthRedirectUri" name="oauthRedirectUri" placeholder="http://tenant.sarthak.cfd/sso/oauth/callback" required>
                             <p class="small-text">**Provide this URL to your IdP.** The authorized redirect endpoint in your application.</p>
                         </div>
 
@@ -499,76 +499,141 @@
 </div>
 
 <script>
-    // --- JavaScript Logic (unchanged for tab switching functionality) ---
-
     const token = localStorage.getItem('authToken');
-    // Simplified redirect for demo purposes
-    // if (!token) window.location.href = '/login.html'; 
+    if (!token) window.location.href = '/login.html';
 
-    // Tab switching
+    /* ---------------------------------------------------------
+        TAB SWITCHING
+    --------------------------------------------------------- */
     document.querySelectorAll('.nav-link').forEach(tab => {
         tab.addEventListener('click', function() {
             document.querySelectorAll('.nav-link').forEach(t => t.classList.remove('active'));
             this.classList.add('active');
-            
-            // This is crucial: remove active class from all form-sections, 
-            // and only show the one matching the clicked tab's data-section.
+
             document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
             document.getElementById(this.dataset.section).classList.add('active');
         });
     });
 
-    // Mock functions for API interaction and testing
+    /* ---------------------------------------------------------
+        LOAD CONFIG FROM API
+    --------------------------------------------------------- */
     async function loadSSOConfig() {
-        // Placeholder for API call to load settings
-        console.log('Loading SSO configuration from API...');
+        try {
+            const res = await fetch('/api/sso/config', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!res.ok) return;
+
+            const configs = await res.json(); // Array of providers
+            configs.forEach(populateForm);
+
+        } catch (err) {
+            console.error("Load failed:", err);
+        }
     }
 
-    // Function to handle form data population (simplified)
-    function populateForm(config) { /* ... implementation ... */ }
+    /* ---------------------------------------------------------
+        POPULATE FORMS BASED ON PROVIDER
+    --------------------------------------------------------- */
+    function populateForm(config) {
+        const formId = `${config.provider.toLowerCase()}Form`;
+        const form = document.getElementById(formId);
+        if (!form) return;
 
-    // Form submit handlers
-    ['jwtForm','samlForm','oauthForm'].forEach(id => {
+        Object.keys(config).forEach(key => {
+            const input = form.querySelector(`[name="${key}"]`);
+            if (!input) return;
+
+            if (input.type === 'checkbox') {
+                input.checked = config[key] === true;
+            } else {
+                input.value = config[key] || "";
+            }
+        });
+    }
+
+    /* ---------------------------------------------------------
+        FORM SUBMISSION HANDLERS
+    --------------------------------------------------------- */
+    ['jwtForm', 'samlForm', 'oauthForm'].forEach(id => {
         document.getElementById(id).addEventListener('submit', async e => {
             e.preventDefault();
-            const provider = id.replace('Form','').toUpperCase();
+
+            const provider = id.replace("Form", "").toUpperCase(); // JWT / SAML / OAUTH
             const submitBtn = e.target.querySelector('.btn-primary');
-            const originalHtml = submitBtn.innerHTML;
-            
+            const originalBtn = submitBtn.innerHTML;
+
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-            
-            // Mock API delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
 
-            // Mock success/failure
-            const data = Object.fromEntries(new FormData(e.target));
-            if (data.enabled === 'on' && data[`${provider.toLowerCase()}Url`] && data[`${provider.toLowerCase()}Url`].includes('xecurify')) {
-                showAlert(`Configuration for **${provider}** successfully saved!`, 'success');
-            } else {
-                 showAlert(`**${provider}** Save failed. Please check all required fields.`, 'error');
+            // Prepare payload
+            const data = { provider };
+            new FormData(e.target).forEach((v, k) => {
+                data[k] = (k === "enabled") ? (v === "on") : v;
+            });
+
+            // Checkbox unchecked case
+            if (!data.enabled) data.enabled = false;
+
+            try {
+                const res = await fetch('/api/sso/config', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    showAlert(`Configuration for **${provider}** successfully saved!`, 'success');
+                } else {
+                    const err = await res.json();
+                    showAlert(err.error || `Failed to save ${provider} settings`, 'error');
+                }
+            } catch (error) {
+                showAlert("Network error. Could not connect to API.", "error");
             }
 
             submitBtn.disabled = false;
-            submitBtn.innerHTML = originalHtml;
+            submitBtn.innerHTML = originalBtn;
         });
     });
 
-    function testJWT(){ window.open('/sso/jwt/login','_blank'); }
-    function testSAML(){ window.open('/sso/saml/login','_blank'); }
-    function testOAuth(){ window.open('/sso/oauth/login','_blank'); }
+    /* ---------------------------------------------------------
+        TEST BUTTON HANDLERS
+    --------------------------------------------------------- */
+    function testJWT() { window.open('/sso/jwt/login', '_blank'); }
+    function testSAML() { window.open('/sso/saml/login', '_blank'); }
+    function testOAuth() { window.open('/sso/oauth/login', '_blank'); }
 
-    function showAlert(msg,type){
+    /* ---------------------------------------------------------
+        ALERT MESSAGE HANDLER
+    --------------------------------------------------------- */
+    function showAlert(msg, type) {
         const c = document.getElementById('alertContainer');
-        c.innerHTML=`<div class="alert ${type==='success'?'alert-success':'alert-error'}">
-                        <i class="fas ${type==='success' ? 'fa-check-circle' : 'fa-times-circle'}"></i>
-                        ${msg}
-                    </div>`;
-        const a=c.querySelector('.alert'); a.style.display='flex';
-        setTimeout(()=>a.style.display='none',7000);
+
+        c.innerHTML = `
+            <div class="alert ${type === 'success' ? 'alert-success' : 'alert-error'}">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                ${msg}
+            </div>
+        `;
+
+        const a = c.querySelector('.alert');
+        a.style.display = 'flex';
+
+        setTimeout(() => a.style.display = 'none', 7000);
     }
 
+    // INITIAL LOAD
     loadSSOConfig();
 </script>
+
+
 </body>
 </html>

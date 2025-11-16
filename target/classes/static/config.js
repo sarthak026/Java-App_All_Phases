@@ -5,7 +5,7 @@ const APP_CONFIG = {
         BASE_DOMAIN: 'localhost'
     },
     production: {
-        BASE_DOMAIN: 'oggyandolivia.cfd' // change later for prod
+        BASE_DOMAIN: 'sarthak.cfd' // change later for prod
     }
 };
 
